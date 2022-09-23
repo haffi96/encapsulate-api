@@ -13,9 +13,26 @@ pub struct AppState {
  }
 
 
-#[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
+// account_user
+#[derive(Identifiable, Debug, Serialize, Deserialize, Queryable, Insertable)]
+#[table_name = "account_user"]
+pub struct AccountUser {
+    pub id: i64,
+    pub account_user_uuid: Uuid,
+    pub email: String,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+
+
+// note
+#[derive(Identifiable, Debug, Serialize, Deserialize, Associations, Queryable, Insertable)]
+#[table_name = "note"]
 pub struct Note {
-    pub id: Uuid,
+    pub id: i64,
+    pub account_user_id: i64,
+    pub note_uuid: Uuid,
     pub title: String,
     pub body: String,
     pub created_at: NaiveDateTime,
@@ -23,10 +40,12 @@ pub struct Note {
 }
 
 
-#[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "notes"]
+#[derive(Identifiable, Debug, Serialize, Deserialize, Associations, Queryable, Insertable)]
+#[table_name = "note"]
 pub struct NewNote {
     pub id: Uuid,
+    pub account_user_id: i64,
+    pub note_uuid: Uuid,
     pub title: String,
     pub body: String,
 }
