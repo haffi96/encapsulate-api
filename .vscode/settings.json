@@ -1,0 +1,5 @@
+{
+    "dotenv.enableAutocloaking": false,
+    "editor.inlayHints.enabled": "offUnlessPressed",
+    "editor.formatOnSave": true,
+}
