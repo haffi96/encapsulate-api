@@ -42,6 +42,8 @@ diesel setup
 diesel migration run
 ````
 
-
-
 https://github.com/actix/examples
+
+
+### Latest Changes
+
