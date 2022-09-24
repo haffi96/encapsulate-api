@@ -1,88 +1,86 @@
-
-use crate::actix::{Actor, Handler, Message, SyncContext};
+use crate::actix::{Handler, Message};
+use crate::actors::DbActor;
 use crate::diesel::prelude::*;
-use crate::models::{Note, NewNote};
-use crate::schema::notes::dsl::{notes, id, title, body, updated_at};
-use chrono::NaiveDateTime;
-use diesel::{
-    r2d2::{ConnectionManager, Pool},
-    PgConnection,
-};
+use crate::models::{NewNote, Note};
+use crate::schema::note::dsl::{account_user_id, body, note, note_uuid, title, updated_at};
 use uuid::Uuid;
 
-pub struct DbActor(pub Pool<ConnectionManager<PgConnection>>);
-
+use std::time::SystemTime;
 
 #[derive(Message)]
-#[rtype(result="QueryResult<Note>")]
-pub struct Create {
+#[rtype(result = "QueryResult<Note>")]
+pub struct CreateNote {
+    pub account_user_id: i64,
+    pub note_uuid: Uuid,
     pub title: String,
     pub body: String,
 }
 
 #[derive(Message)]
-#[rtype(result="QueryResult<Note>")]
-pub struct Update {
-    pub id: Uuid,
+#[rtype(result = "QueryResult<Note>")]
+pub struct UpdateNote {
+    pub note_uuid: Uuid,
     pub title: String,
     pub body: String,
-    pub updated_at: NaiveDateTime
+    pub updated_at: SystemTime,
 }
 
 #[derive(Message)]
-#[rtype(result="QueryResult<Note>")]
-pub struct Delete {
-    pub id: Uuid
+#[rtype(result = "QueryResult<Note>")]
+pub struct DeleteNote {
+    pub note_uuid: Uuid,
 }
 
 #[derive(Message)]
-#[rtype(result="QueryResult<Vec<Note>>")]
-pub struct GetNotes;
-
-
-impl Actor for DbActor {
-    type Context = SyncContext<Self>;
+#[rtype(result = "QueryResult<Vec<Note>>")]
+pub struct GetNotes {
+    pub account_user_id: i64,
 }
 
-impl Handler<Create> for DbActor {
+impl Handler<CreateNote> for DbActor {
     type Result = QueryResult<Note>;
 
-    fn handle(&mut self, msg: Create, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: CreateNote, _: &mut Self::Context) -> Self::Result {
         let conn = self.0.get().expect("Unable to get a connection");
         let new_note = NewNote {
-            id: Uuid::new_v4(),
+            account_user_id: msg.account_user_id,
+            note_uuid: msg.note_uuid,
             title: msg.title,
-            body: msg.body
+            body: msg.body,
         };
 
-        diesel::insert_into(notes)
-        .values(new_note)
-        .get_result::<Note>(&conn)
+        diesel::insert_into(note)
+            .values(new_note)
+            .get_result::<Note>(&conn)
     }
 }
 
-impl Handler<Update> for DbActor {
+impl Handler<UpdateNote> for DbActor {
     type Result = QueryResult<Note>;
 
-    fn handle(&mut self, msg: Update, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: UpdateNote, _: &mut Self::Context) -> Self::Result {
         let conn = self.0.get().expect("Unable to get a connection");
 
-        diesel::update(notes)
-        .filter(id.eq(msg.id))
-        .set((title.eq(msg.title), body.eq(msg.body), updated_at.eq(msg.updated_at)))
-        .get_result::<Note>(&conn)
+        diesel::update(note)
+            .filter(note_uuid.eq(msg.note_uuid))
+            .set((
+                title.eq(msg.title),
+                body.eq(msg.body),
+                updated_at.eq(msg.updated_at),
+            ))
+            .get_result::<Note>(&conn)
     }
 }
 
-impl Handler<Delete> for DbActor {
+impl Handler<DeleteNote> for DbActor {
     type Result = QueryResult<Note>;
 
-    fn handle(&mut self, msg: Delete, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: DeleteNote, _: &mut Self::Context) -> Self::Result {
         let conn = self.0.get().expect("Unable to get a connection");
 
-        diesel::delete(notes)
-                .filter(id.eq(msg.id))
-                .get_result::<Note>(&conn)
+        diesel::delete(note)
+            .filter(note_uuid.eq(msg.note_uuid))
+            .get_result::<Note>(&conn)
     }
 }
 
@@ -91,6 +89,7 @@ impl Handler<GetNotes> for DbActor {
 
     fn handle(&mut self, msg: GetNotes, _: &mut Self::Context) -> Self::Result {
         let conn = self.0.get().expect("Unable to get a connection");
-        notes.get_results::<Note>(&conn)
+        note.filter(account_user_id.eq(msg.account_user_id))
+            .get_results::<Note>(&conn)
     }
 }
