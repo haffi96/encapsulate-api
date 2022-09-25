@@ -47,4 +47,5 @@ https://github.com/actix/examples
 
 ### Latest Changes
 
+* Add simple auth and todos. PR [#3](https://github.com/haffi96/encapsulate-api/pull/3) by [@haffi96](https://github.com/haffi96).
 * add user table. PR [#2](https://github.com/haffi96/encapsulate-api/pull/2) by [@haffi96](https://github.com/haffi96).
