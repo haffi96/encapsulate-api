@@ -1,5 +1,7 @@
 pub mod notes;
+pub mod todos;
 pub mod users;
+
 use crate::actix::{Actor, SyncContext};
 
 use diesel::{

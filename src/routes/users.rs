@@ -1,4 +1,5 @@
-use crate::actors::users::{CreateUser, DeleteUser, GetUser, UpdateUser};
+use crate::actors::users::{AuthUser, CreateUser, DeleteUser, GetUser, UpdateUser};
+use crate::errors::ServiceError;
 use crate::models::{AccountUserData, AppState, UpdateAccountUserData};
 
 use actix_web::{
@@ -18,11 +19,32 @@ pub async fn create_user(
     match db
         .send(CreateUser {
             email: account_user.email,
+            pwd: account_user.pwd,
         })
         .await
     {
         Ok(Ok(account_user)) => HttpResponse::Ok().json(account_user),
         _ => HttpResponse::InternalServerError().json("Something went wrong"),
+    }
+}
+
+#[post("/login")]
+pub async fn login_user(
+    account_user: Json<AccountUserData>,
+    state: Data<AppState>,
+) -> impl Responder {
+    let db = state.as_ref().db.clone();
+    let account_user = account_user.into_inner();
+
+    match db
+        .send(AuthUser {
+            email: account_user.email,
+            pwd: account_user.pwd,
+        })
+        .await
+    {
+        Ok(Ok(account_user)) => HttpResponse::Ok().json(account_user),
+        _ => HttpResponse::Unauthorized().json("Credentials incorrect"),
     }
 }
 

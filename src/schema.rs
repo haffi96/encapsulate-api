@@ -5,6 +5,7 @@ diesel::table! {
         id -> Int8,
         account_user_uuid -> Uuid,
         email -> Varchar,
+        hash -> Varchar,
         created_at -> Timestamp,
         updated_at -> Timestamp,
     }
@@ -22,6 +23,21 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(note -> account_user (account_user_id));
+diesel::table! {
+    todo (id) {
+        id -> Int8,
+        account_user_id -> Int8,
+        todo_uuid -> Uuid,
+        body -> Text,
+        completed -> Bool,
+        reminder_time -> Nullable<Timestamp>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
 
-diesel::allow_tables_to_appear_in_same_query!(account_user, note,);
+diesel::allow_tables_to_appear_in_same_query!(
+    account_user,
+    note,
+    todo,
+);

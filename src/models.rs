@@ -3,9 +3,7 @@ use super::schema::*;
 use crate::actors::DbActor;
 use actix::Addr;
 use chrono::NaiveDateTime;
-use diesel::sql_types::Timestamp;
 use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
 use uuid::Uuid;
 
 pub struct AppState {
@@ -19,20 +17,24 @@ pub struct AccountUser {
     pub id: i64,
     pub account_user_uuid: Uuid,
     pub email: String,
-    pub created_at: SystemTime,
-    pub updated_at: SystemTime,
+    #[serde(skip_serializing)]
+    pub hash: String,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 #[derive(Debug, Serialize, Deserialize, Associations, Queryable, Insertable)]
 #[table_name = "account_user"]
 pub struct NewAccountUser {
     pub account_user_uuid: Uuid,
+    pub hash: String,
     pub email: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct AccountUserData {
     pub email: String,
+    pub pwd: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -49,8 +51,8 @@ pub struct Note {
     pub note_uuid: Uuid,
     pub title: String,
     pub body: String,
-    pub created_at: SystemTime,
-    pub updated_at: SystemTime,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 #[derive(Debug, Serialize, Deserialize, Associations, Queryable, Insertable)]
@@ -73,5 +75,42 @@ pub struct NewNoteData {
 pub struct UpdateNoteData {
     pub title: String,
     pub body: String,
-    pub update_at: SystemTime,
+    pub updated_at: NaiveDateTime,
+}
+
+// todo
+#[derive(Identifiable, Debug, Serialize, Deserialize, Associations, Queryable, Insertable)]
+#[table_name = "todo"]
+pub struct Todo {
+    pub id: i64,
+    pub account_user_id: i64,
+    pub todo_uuid: Uuid,
+    pub body: String,
+    pub completed: bool,
+    pub reminder_time: Option<NaiveDateTime>,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+#[derive(Debug, Serialize, Deserialize, Associations, Queryable, Insertable)]
+#[table_name = "todo"]
+pub struct NewTodo {
+    pub account_user_id: i64,
+    pub todo_uuid: Uuid,
+    pub body: String,
+    pub completed: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NewTodoData {
+    pub account_user_id: i64,
+    pub body: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct UpdateTodoData {
+    pub body: String,
+    pub completed: bool,
+    pub reminder_time: Option<NaiveDateTime>,
+    pub updated_at: NaiveDateTime,
 }

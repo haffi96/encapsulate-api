@@ -3,9 +3,8 @@ use crate::actors::DbActor;
 use crate::diesel::prelude::*;
 use crate::models::{NewNote, Note};
 use crate::schema::note::dsl::{account_user_id, body, note, note_uuid, title, updated_at};
+use chrono::NaiveDateTime;
 use uuid::Uuid;
-
-use std::time::SystemTime;
 
 #[derive(Message)]
 #[rtype(result = "QueryResult<Note>")]
@@ -22,7 +21,7 @@ pub struct UpdateNote {
     pub note_uuid: Uuid,
     pub title: String,
     pub body: String,
-    pub updated_at: SystemTime,
+    pub updated_at: NaiveDateTime,
 }
 
 #[derive(Message)]
