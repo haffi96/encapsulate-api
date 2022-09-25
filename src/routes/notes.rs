@@ -63,7 +63,7 @@ async fn update_note(
             note_uuid: note_uuid,
             title: note.title,
             body: note.body,
-            updated_at: note.update_at,
+            updated_at: note.updated_at,
         })
         .await
     {

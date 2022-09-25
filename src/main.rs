@@ -9,9 +9,11 @@ extern crate dotenv;
 mod actors;
 pub mod app_config;
 mod db_utils;
+pub mod errors;
 mod models;
 pub mod routes;
 mod schema;
+pub mod utils;
 
 use actix_web::{web::Data, App, HttpServer};
 

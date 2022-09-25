@@ -2,7 +2,8 @@ CREATE TABLE
     account_user (
         id BIGSERIAL PRIMARY KEY,
         account_user_uuid UUID NOT NULL,
-        email VARCHAR NOT NULL,
+        email VARCHAR(100) NOT NULL,
+        hash VARCHAR NOT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );

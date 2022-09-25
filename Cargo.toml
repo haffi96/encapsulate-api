@@ -17,3 +17,5 @@ uuid = { version = "0.8.2", features = ["serde", "v4"] }
 diesel = { version = "1.4", features = ["postgres", "uuidv07", "r2d2", "chrono"] }
 diesel_migrations = "1.4.0"
 log = { version = "0.4", features = ["max_level_trace", "release_max_level_warn", "std", "serde"] }
+rust-argon2 = "1"
+derive_more = "0.99.5"
