@@ -1,17 +1,20 @@
 use crate::actors::users::{AuthUser, CreateUser, DeleteUser, GetUser, UpdateUser};
 use crate::errors::ServiceError;
 use crate::models::{AccountUserData, AppState, UpdateAccountUserData};
+use actix_session::Session;
 
 use actix_web::{
     delete, get, post, put,
     web::{Data, Json, Path},
-    HttpResponse, Responder,
+    HttpResponse, Responder
 };
+use uuid::Uuid;
 
 #[post("/register")]
 pub async fn create_user(
     account_user: Json<AccountUserData>,
     state: Data<AppState>,
+    session: Session,
 ) -> impl Responder {
     let db = state.as_ref().db.clone();
     let account_user = account_user.into_inner();
@@ -23,7 +26,10 @@ pub async fn create_user(
         })
         .await
     {
-        Ok(Ok(account_user)) => HttpResponse::Ok().json(account_user),
+        Ok(Ok(account_user)) => {
+            session.insert(account_user.account_user_uuid.to_string(), "token").expect("Failed to save session");
+            HttpResponse::Ok().json(account_user)
+        },
         _ => HttpResponse::InternalServerError().json("Something went wrong"),
     }
 }
@@ -32,6 +38,7 @@ pub async fn create_user(
 pub async fn login_user(
     account_user: Json<AccountUserData>,
     state: Data<AppState>,
+    session: Session,
 ) -> impl Responder {
     let db = state.as_ref().db.clone();
     let account_user = account_user.into_inner();
@@ -43,10 +50,55 @@ pub async fn login_user(
         })
         .await
     {
-        Ok(Ok(account_user)) => HttpResponse::Ok().json(account_user),
+        Ok(Ok(account_user)) => {
+            session.insert(account_user.account_user_uuid.to_string(), "token").expect("Failed to save session");
+            session.renew();
+            HttpResponse::Ok().json(account_user)
+        },
         _ => HttpResponse::Unauthorized().json("Credentials incorrect"),
     }
 }
+
+
+pub fn validate_session(account_id: &i64, session: &Session) -> impl Responder {
+    let user_id: Option<i64> = session.get(&account_id.to_string()).expect("Failed to find sessoin");
+
+    match user_id {
+        Some(_id) => {
+            // keep the user's session alive
+            session.renew();
+            HttpResponse::Ok()
+        }
+        None => HttpResponse::Unauthorized(),
+    }
+}
+
+
+#[post("/logout/{account_uuid}")]
+pub async fn logout_user(
+    path: Path<i64>,
+    state: Data<AppState>,
+    session: Session,
+) -> impl Responder {
+    
+    let db = state.as_ref().db.clone();
+    let account_id = path.into_inner();
+    validate_session(&account_id, &session);
+
+    match db
+    .send(GetUser {
+        account_user_id: account_id
+    })
+    .await
+    {
+        Ok(_) => {
+            session.purge();
+            HttpResponse::Ok().json(format!("Logged out user"))
+        },
+        _ => (HttpResponse::Unauthorized().json("Unable to logout user"))
+    }
+}
+
 
 #[delete("/{account_id}")]
 async fn delete_account(path: Path<i64>, state: Data<AppState>) -> impl Responder {
